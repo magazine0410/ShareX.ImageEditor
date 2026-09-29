@@ -130,7 +130,8 @@ public sealed class BackgroundRemovalService : IDisposable
 
     private static SessionCreationResult CreateSession(string modelPath, BackgroundRemovalDevice device)
     {
-        if (device == BackgroundRemovalDevice.CPU)
+        if (device == BackgroundRemovalDevice.CPU ||
+            (device == BackgroundRemovalDevice.Auto && !OperatingSystem.IsWindows()))
         {
             return new SessionCreationResult(new InferenceSession(modelPath), "CPU");
         }

@@ -48,14 +48,16 @@ public sealed partial class BackgroundRemoverViewModel : ViewModelBase, IDisposa
     {
         ModelsFolder = modelsFolder;
         _options = options;
-        SelectedDevice = Enum.IsDefined(options.SelectedDevice) ? options.SelectedDevice : BackgroundRemovalDevice.Auto;
+        SelectedDevice = AvailableDevices.Contains(options.SelectedDevice) ? options.SelectedDevice : BackgroundRemovalDevice.Auto;
         _options.SelectedDevice = SelectedDevice;
         RefreshModels();
     }
 
     public ObservableCollection<BackgroundRemovalModel> AvailableModels { get; } = [];
 
-    public IReadOnlyList<BackgroundRemovalDevice> AvailableDevices { get; } = Enum.GetValues<BackgroundRemovalDevice>();
+    public IReadOnlyList<BackgroundRemovalDevice> AvailableDevices { get; } = OperatingSystem.IsWindows()
+        ? Enum.GetValues<BackgroundRemovalDevice>()
+        : [BackgroundRemovalDevice.Auto, BackgroundRemovalDevice.CPU];
 
     public string? ModelsFolder { get; }
 

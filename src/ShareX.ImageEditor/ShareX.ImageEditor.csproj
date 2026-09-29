@@ -43,7 +43,10 @@
     <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML"
+                      Condition="$(RuntimeIdentifier.StartsWith('win')) Or ('$(RuntimeIdentifier)' == '' And '$(OS)' == 'Windows_NT')" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime"
+                      Condition="!$(RuntimeIdentifier.StartsWith('win')) And ('$(RuntimeIdentifier)' != '' Or '$(OS)' != 'Windows_NT')" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="Vortice.Direct2D1" VersionOverride="3.8.3" />
