@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using ShareX.ImageEditor.Core.Annotations;
+using ShareX.ImageEditor.Presentation.ViewModels;
 using SkiaSharp;
 
 namespace ShareX.ImageEditor.Hosting;
@@ -57,4 +58,10 @@ public sealed class ImageEditorSessionResult
     /// Annotation snapshot cloned from the editor when it closed.
     /// </summary>
     public IReadOnlyList<Annotation> Annotations { get; }
+
+    /// <summary>
+    /// The editor command that closed the session. Closing through Exit, Cancel, or the window's
+    /// close button reports <see cref="MainViewModel.EditorTaskResult.Cancel"/>.
+    /// </summary>
+    public MainViewModel.EditorTaskResult TaskResult { get; init; } = MainViewModel.EditorTaskResult.None;
 }
