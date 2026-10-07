@@ -2007,7 +2007,7 @@ namespace ShareX.ImageEditor.Presentation.Views
                                 using var memStream = new System.IO.MemoryStream();
                                 await stream.CopyToAsync(memStream);
                                 memStream.Position = 0;
-                                var skBitmap = SKBitmap.Decode(memStream);
+                                var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(memStream);
                                 if (skBitmap != null)
                                 {
                                     // If there's no base image yet (common in embedded MainWindow editor),
@@ -2175,7 +2175,7 @@ namespace ShareX.ImageEditor.Presentation.Views
                 await stream.CopyToAsync(memStream);
                 memStream.Position = 0;
 
-                var skBitmap = SKBitmap.Decode(memStream);
+                var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(memStream);
                 if (skBitmap == null) return;
 
                 LoadBitmapIntoEditor(vm, skBitmap, filePath);
@@ -2306,7 +2306,7 @@ namespace ShareX.ImageEditor.Presentation.Views
                     (clipboardBitmap as IDisposable)?.Dispose();
                     ms.Position = 0;
 
-                    var skBitmap = SKBitmap.Decode(ms);
+                    var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(ms);
                     if (skBitmap != null)
                     {
                         vm.CloseModalCommand.Execute(null);
@@ -2330,7 +2330,7 @@ namespace ShareX.ImageEditor.Presentation.Views
                             await stream.CopyToAsync(memStream);
                             memStream.Position = 0;
 
-                            var skBitmap = SKBitmap.Decode(memStream);
+                            var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(memStream);
                             if (skBitmap != null)
                             {
                                 vm.CloseModalCommand.Execute(null);
@@ -2376,7 +2376,7 @@ namespace ShareX.ImageEditor.Presentation.Views
                 await stream.CopyToAsync(memStream);
                 memStream.Position = 0;
 
-                var skBitmap = SKBitmap.Decode(memStream);
+                var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(memStream);
                 if (skBitmap == null)
                 {
                     startScreenDialog?.SetUrlLoading(false);
@@ -2412,7 +2412,7 @@ namespace ShareX.ImageEditor.Presentation.Views
             try
             {
                 using var stream = File.OpenRead(filePath);
-                var skBitmap = SKBitmap.Decode(stream);
+                var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(stream);
                 if (skBitmap == null)
                 {
                     EditorServices.ReportError(nameof(EditorView), $"Failed to decode image file '{filePath}'.");

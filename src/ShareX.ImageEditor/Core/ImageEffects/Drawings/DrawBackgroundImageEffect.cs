@@ -62,7 +62,7 @@ public sealed class DrawBackgroundImageEffect : ImageEffectBase
             return source.Copy();
         }
 
-        using SKBitmap? backgroundImage = SKBitmap.Decode(imagePath);
+        using SKBitmap? backgroundImage = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(imagePath);
         if (backgroundImage is null || backgroundImage.Width <= 0 || backgroundImage.Height <= 0)
         {
             return source.Copy();

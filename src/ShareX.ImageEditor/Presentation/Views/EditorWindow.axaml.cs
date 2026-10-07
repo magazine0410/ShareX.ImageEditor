@@ -180,7 +180,7 @@ namespace ShareX.ImageEditor.Presentation.Views
             try
             {
                 using var stream = File.OpenRead(filePath);
-                SKBitmap? bitmap = SKBitmap.Decode(stream);
+                SKBitmap? bitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(stream);
                 if (bitmap == null)
                 {
                     throw new InvalidOperationException("SkiaSharp returned no bitmap.");
@@ -209,7 +209,7 @@ namespace ShareX.ImageEditor.Presentation.Views
                 if (stream.CanSeek && stream.Position != 0)
                     stream.Position = 0;
 
-                SKBitmap? bitmap = SKBitmap.Decode(stream);
+                SKBitmap? bitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(stream);
                 if (bitmap == null)
                 {
                     throw new InvalidOperationException("SkiaSharp returned no bitmap.");

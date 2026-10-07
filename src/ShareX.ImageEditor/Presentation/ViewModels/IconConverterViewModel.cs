@@ -144,7 +144,7 @@ public sealed partial class IconConverterViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            SKBitmap? bitmap = SKBitmap.Decode(filePath);
+            SKBitmap? bitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(filePath);
             if (bitmap == null)
             {
                 StatusText = "The selected file could not be loaded as an image.";

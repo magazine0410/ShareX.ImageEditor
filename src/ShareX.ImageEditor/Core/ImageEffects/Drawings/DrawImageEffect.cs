@@ -147,7 +147,7 @@ public sealed class DrawImageEffect : ImageEffectBase
             return source.Copy();
         }
 
-        using SKBitmap? sourceWatermark = SKBitmap.Decode(imagePath);
+        using SKBitmap? sourceWatermark = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(imagePath);
         if (sourceWatermark is null || sourceWatermark.Width <= 0 || sourceWatermark.Height <= 0)
         {
             return source.Copy();

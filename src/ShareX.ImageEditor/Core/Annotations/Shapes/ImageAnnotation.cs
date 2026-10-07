@@ -62,7 +62,7 @@ public partial class ImageAnnotation : Annotation, IDisposable
             {
                 ImagePath = path;
                 _imageBitmap?.Dispose();
-                _imageBitmap = SKBitmap.Decode(path);
+                _imageBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(path);
             }
             catch { }
         }

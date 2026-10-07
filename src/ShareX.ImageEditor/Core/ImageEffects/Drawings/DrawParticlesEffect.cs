@@ -135,7 +135,7 @@ public sealed class DrawParticlesEffect : ImageEffectBase
                 string file = files[Random.Shared.Next(0, files.Length)];
                 if (!imageCache.TryGetValue(file, out SKBitmap? particleBitmap))
                 {
-                    particleBitmap = SKBitmap.Decode(file);
+                    particleBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(file);
                     if (particleBitmap != null)
                     {
                         imageCache[file] = particleBitmap;

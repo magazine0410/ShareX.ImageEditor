@@ -243,7 +243,7 @@ public sealed partial class BackgroundRemoverViewModel : ViewModelBase, IDisposa
 
         try
         {
-            SKBitmap? bitmap = SKBitmap.Decode(filePath);
+            SKBitmap? bitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(filePath);
             if (bitmap == null)
             {
                 return;
@@ -277,7 +277,7 @@ public sealed partial class BackgroundRemoverViewModel : ViewModelBase, IDisposa
             BackgroundRemovalDevice selectedDevice = SelectedDevice;
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            SKBitmap? sourceBitmap = SKBitmap.Decode(ImagePath);
+            SKBitmap? sourceBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(ImagePath);
             if (sourceBitmap == null)
             {
                 return;

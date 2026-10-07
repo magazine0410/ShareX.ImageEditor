@@ -43,6 +43,18 @@ public static class EditorServices
     /// </summary>
     public static IClipboardService? Clipboard { get; set; }
 
+    /// <summary>Optional host decoder for additional formats and image orientation preferences.</summary>
+    public static Func<Stream, SkiaSharp.SKBitmap?>? ImageDecoder { get; set; }
+
+    public static SkiaSharp.SKBitmap? DecodeImage(Stream stream) =>
+        ImageDecoder != null ? ImageDecoder(stream) : SkiaSharp.SKBitmap.Decode(stream);
+
+    public static SkiaSharp.SKBitmap? DecodeImage(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return DecodeImage(stream);
+    }
+
     /// <summary>
     /// Optional diagnostics sink for exception/messages emitted by ImageEditor.
     /// </summary>

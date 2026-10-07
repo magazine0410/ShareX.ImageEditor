@@ -182,7 +182,7 @@ public class EditorCore : IDisposable
     /// </summary>
     public void LoadImage(string filePath)
     {
-        var bitmap = SKBitmap.Decode(filePath);
+        var bitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(filePath);
         if (bitmap != null)
         {
             LoadImage(bitmap);
