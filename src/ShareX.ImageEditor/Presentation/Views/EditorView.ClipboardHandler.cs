@@ -242,7 +242,7 @@ namespace ShareX.ImageEditor.Presentation.Views
                                     using var memStream = new System.IO.MemoryStream();
                                     await stream.CopyToAsync(memStream);
                                     memStream.Position = 0;
-                                    var skBitmap = SKBitmap.Decode(memStream);
+                                    var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(memStream);
                                     if (skBitmap != null)
                                     {
                                         await InsertExternalImageAsync(skBitmap, storageFile.Path.LocalPath);

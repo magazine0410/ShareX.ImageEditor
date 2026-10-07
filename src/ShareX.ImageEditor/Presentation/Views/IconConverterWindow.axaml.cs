@@ -69,7 +69,7 @@ public partial class IconConverterWindow : Window
         {
             Title = title,
             AllowMultiple = false,
-            FileTypeFilter = [FilePickerFileTypes.ImageAll]
+            FileTypeFilter = [ShareX.ImageEditor.Presentation.Helpers.ImageFilePickerTypes.Images]
         });
 
         return files.Count > 0 ? files[0].Path.LocalPath : null;

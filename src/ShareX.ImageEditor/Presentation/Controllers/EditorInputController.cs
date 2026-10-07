@@ -1523,16 +1523,19 @@ public class EditorInputController
             {
                 Title = "Select Image",
                 AllowMultiple = false,
-                FileTypeFilter = new[] { FilePickerFileTypes.ImageAll }
+                FileTypeFilter = new[] { ShareX.ImageEditor.Presentation.Helpers.ImageFilePickerTypes.Images }
             });
 
             if (files.Count > 0)
             {
                 using var stream = await files[0].OpenReadAsync();
-                var bitmap = new global::Avalonia.Media.Imaging.Bitmap(stream);
+                // The host decoder handles TIFF files and EXIF orientation.
+                var skBitmap = ShareX.ImageEditor.Hosting.EditorServices.DecodeImage(stream);
+                if (skBitmap == null) return;
+                var bitmap = BitmapConversionHelpers.ToAvaloniBitmap(skBitmap);
                 var imageControl = new Image { Source = bitmap, Width = bitmap.Size.Width, Height = bitmap.Size.Height };
                 var annotation = new ImageAnnotation();
-                annotation.SetImage(BitmapConversionHelpers.ToSKBitmap(bitmap));
+                annotation.SetImage(skBitmap);
                 imageControl.Tag = annotation;
                 _view.SyncAnnotationCursor(imageControl);
 

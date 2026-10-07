@@ -103,7 +103,7 @@ namespace ShareX.ImageEditor.Presentation.Views
             {
                 Title = dialogTitle,
                 AllowMultiple = false,
-                FileTypeFilter = [FilePickerFileTypes.ImageAll]
+                FileTypeFilter = [ShareX.ImageEditor.Presentation.Helpers.ImageFilePickerTypes.Images]
             });
 
             if (files.Count == 0)
@@ -116,7 +116,7 @@ namespace ShareX.ImageEditor.Presentation.Views
             await stream.CopyToAsync(memStream);
             memStream.Position = 0;
 
-            SKBitmap? skBitmap = SKBitmap.Decode(memStream);
+            SKBitmap? skBitmap = EditorServices.DecodeImage(memStream);
             return skBitmap == null ? null : (skBitmap, files[0].Path.LocalPath);
         }
 
