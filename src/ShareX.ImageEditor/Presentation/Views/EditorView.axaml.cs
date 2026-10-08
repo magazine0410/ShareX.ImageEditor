@@ -43,6 +43,7 @@ using ShareX.ImageEditor.Localization;
 using ShareX.ImageEditor.Presentation.Controllers;
 using ShareX.ImageEditor.Presentation.Controls;
 using ShareX.ImageEditor.Presentation.Emoji;
+using ShareX.ImageEditor.Presentation.Helpers;
 using ShareX.ImageEditor.Presentation.Rendering;
 using ShareX.ImageEditor.Presentation.Theming;
 using ShareX.ImageEditor.Presentation.ViewModels;
@@ -2496,15 +2497,7 @@ namespace ShareX.ImageEditor.Presentation.Views
 
             using var image = SKImage.FromBitmap(skBitmap);
             using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
-            using var memStream = new System.IO.MemoryStream(encoded.ToArray());
-            var bitmap = new Avalonia.Media.Imaging.Bitmap(memStream);
-
-            DataTransfer data = new DataTransfer();
-            DataTransferItem item = new DataTransferItem();
-            item.SetBitmap(bitmap);
-            data.Add(item);
-
-            await clipboard.SetDataAsync(data);
+            await clipboard.SetDataAsync(ClipboardImageData.Create(encoded.ToArray()));
         }
 
         private Task<string?> OnSaveRequested()

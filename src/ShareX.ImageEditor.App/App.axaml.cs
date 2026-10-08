@@ -25,11 +25,10 @@
 
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media.Imaging;
 using ShareX.ImageEditor.Hosting;
+using ShareX.ImageEditor.Presentation.Helpers;
 using ShareX.ImageEditor.Presentation.ViewModels;
 using ShareX.ImageEditor.Presentation.Views;
 using SkiaSharp;
@@ -91,16 +90,7 @@ namespace ShareX.ImageEditor.App
 
                             if (bytes != null)
                             {
-                                using (MemoryStream stream = new MemoryStream(bytes))
-                                {
-                                    Bitmap bitmap = new Bitmap(stream);
-                                    DataTransfer data = new DataTransfer();
-                                    DataTransferItem item = new DataTransferItem();
-                                    item.SetBitmap(bitmap);
-                                    data.Add(item);
-
-                                    await clipboard.SetDataAsync(data);
-                                }
+                                await clipboard.SetDataAsync(ClipboardImageData.Create(bytes));
                             }
                         }
                     };
