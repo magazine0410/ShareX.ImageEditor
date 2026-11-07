@@ -243,9 +243,14 @@ namespace ShareX.ImageEditor.Presentation.ViewModels
 
         private async Task SaveAndCloseAfterConfirmationAsync()
         {
-            await RequestSaveAsync();
+            string? savedPath = await RequestSaveAsync();
             CloseModal();
-            CloseRequested?.Invoke(this, EventArgs.Empty);
+
+            // A cancelled or failed save leaves the editor open, so the unsaved work is not lost.
+            if (!string.IsNullOrWhiteSpace(savedPath))
+            {
+                CloseRequested?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         // Export events
