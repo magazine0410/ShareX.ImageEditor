@@ -68,6 +68,13 @@ namespace ShareX.ImageEditor.Presentation.Controls
             {
                 popup.Opened += OnPopupOpened;
             }
+
+            // The list is virtualized, so a font's button is created or reused as it scrolls into view.
+            var items = this.FindControl<ItemsControl>("FontFamilyItems");
+            if (items != null)
+            {
+                items.ContainerPrepared += (_, e) => UpdateActiveState(e.Container);
+            }
         }
 
         private void OnPopupOpened(object? sender, EventArgs e)
@@ -77,21 +84,32 @@ namespace ShareX.ImageEditor.Presentation.Controls
 
         private void UpdateActiveStates()
         {
-            var popup = this.FindControl<Popup>("FontFamilyPopup");
-            if (popup?.Child is Border border && border.Child is ScrollViewer viewer && viewer.Content is ItemsControl itemsControl)
+            var itemsControl = this.FindControl<ItemsControl>("FontFamilyItems");
+            if (itemsControl != null)
             {
                 foreach (var item in itemsControl.GetRealizedContainers())
                 {
-                    if (item is ContentPresenter presenter && presenter.Child is Button button)
+                    UpdateActiveState(item);
+                }
+            }
+        }
+
+        private void UpdateActiveState(Control container)
+        {
+            if (container is ContentPresenter presenter)
+            {
+                // The presenter creates its child from the template only when it updates.
+                presenter.UpdateChild();
+
+                if (presenter.Child is Button button)
+                {
+                    if (presenter.Content is string fontFamily && string.Equals(fontFamily, SelectedFontFamily, StringComparison.Ordinal))
                     {
-                        if (button.CommandParameter is string fontFamily && string.Equals(fontFamily, SelectedFontFamily, StringComparison.Ordinal))
-                        {
-                            button.Classes.Add("active");
-                        }
-                        else
-                        {
-                            button.Classes.Remove("active");
-                        }
+                        button.Classes.Add("active");
+                    }
+                    else
+                    {
+                        button.Classes.Remove("active");
                     }
                 }
             }
