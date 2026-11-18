@@ -139,9 +139,10 @@ public class EditorCore : IDisposable
     private SKRect _initialBounds;
     private SKPoint _rotationCenter;
 
-    private const float HandleSize = 10f;
+    // Matches the size of SelectionResizeNode, which hosts draw at each handle position.
+    private const float HandleSize = 15f;
     private const float RotationHandleOffset = 30f;
-    private enum HandleType { None, TopLeft, TopMiddle, TopRight, MiddleRight, BottomRight, BottomMiddle, BottomLeft, MiddleLeft, Start, End, Rotate }
+    public enum HandleType { None, TopLeft, TopMiddle, TopRight, MiddleRight, BottomRight, BottomMiddle, BottomLeft, MiddleLeft, Start, End, Rotate }
 
     /// <summary>
     /// All annotations in the editor
@@ -1367,6 +1368,15 @@ public class EditorCore : IDisposable
         canvas.DrawBitmap(SourceImage, 0, 0);
 
         return bitmap;
+    }
+
+    /// <summary>
+    /// The handles of the selected annotation that <see cref="OnPointerPressed"/> hit tests, for
+    /// hosts that draw them. Empty when nothing is selected.
+    /// </summary>
+    public IReadOnlyList<(HandleType Type, SKPoint Position)> GetSelectedAnnotationHandles()
+    {
+        return _selectedAnnotation == null ? [] : GetAnnotationHandles(_selectedAnnotation).ToList();
     }
 
     private IEnumerable<(HandleType Type, SKPoint Position)> GetAnnotationHandles(Annotation annotation)
