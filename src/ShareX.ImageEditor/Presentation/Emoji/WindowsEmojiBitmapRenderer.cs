@@ -52,6 +52,12 @@ public static class WindowsEmojiBitmapRenderer
     private static readonly IDWriteFactory? DWriteFactoryInstance;
     private static readonly IWICImagingFactory? WicFactory;
 
+    // Shaping positions are in these units and scaled to the font size when drawing.
+    private const int SystemEmojiShapingScale = 1024;
+    private static bool SystemEmojiFontResolved;
+    private static SKTypeface? SystemEmojiTypeface;
+    private static HarfBuzzSharp.Font? SystemEmojiShapingFont;
+
     static WindowsEmojiBitmapRenderer()
     {
         if (!OperatingSystem.IsWindows())
@@ -182,6 +188,12 @@ public static class WindowsEmojiBitmapRenderer
 
     private static SKBitmap? RenderWithSkiaFallback(string glyph, int canvasSize)
     {
+        // Linux has no "Segoe UI Emoji", and the default typeface has no emoji at all.
+        if (OperatingSystem.IsLinux() && RenderWithSystemEmojiFont(glyph, canvasSize) is { } systemEmoji)
+        {
+            return systemEmoji;
+        }
+
         using SKTypeface? typeface = SKFontManager.Default.MatchFamily(EmojiFontFamily) ?? SKTypeface.Default;
         using var rawBitmap = new SKBitmap(new SKImageInfo(canvasSize, canvasSize, SKColorType.Bgra8888, SKAlphaType.Premul));
         using var canvas = new SKCanvas(rawBitmap);
@@ -204,6 +216,106 @@ public static class WindowsEmojiBitmapRenderer
         canvas.Flush();
 
         return rawBitmap.Copy();
+    }
+
+    /// <summary>
+    /// Draws the emoji with the system's color emoji font (Noto Color Emoji on most Linux systems).
+    /// The sequence is shaped with HarfBuzz first, because drawing its code points one by one
+    /// shows a skin tone, a flag or a joined emoji as separate glyphs.
+    /// Returns null when the system has no emoji font or the font lacks the emoji.
+    /// </summary>
+    private static SKBitmap? RenderWithSystemEmojiFont(string glyph, int canvasSize)
+    {
+        if (!TryGetSystemEmojiFont(out SKTypeface? typeface, out HarfBuzzSharp.Font? shapingFont))
+        {
+            return null;
+        }
+
+        using var buffer = new HarfBuzzSharp.Buffer();
+        buffer.AddUtf16(glyph);
+        buffer.GuessSegmentProperties();
+        shapingFont.Shape(buffer);
+
+        HarfBuzzSharp.GlyphInfo[] infos = buffer.GlyphInfos;
+        HarfBuzzSharp.GlyphPosition[] positions = buffer.GlyphPositions;
+        if (infos.Length == 0 || infos.Any(info => info.Codepoint == 0))
+        {
+            return null;
+        }
+
+        float fontSize = canvasSize * 0.68f;
+        float scale = fontSize / SystemEmojiShapingScale;
+        var glyphIds = new ushort[infos.Length];
+        var points = new SKPoint[infos.Length];
+        float penX = 0;
+        float penY = 0;
+        for (int i = 0; i < infos.Length; i++)
+        {
+            glyphIds[i] = (ushort)infos[i].Codepoint;
+            points[i] = new SKPoint(penX + positions[i].XOffset * scale, penY - positions[i].YOffset * scale);
+            penX += positions[i].XAdvance * scale;
+            penY -= positions[i].YAdvance * scale;
+        }
+
+        using var font = new SKFont(typeface, fontSize);
+        using SKTextBlob? blob = SKTextBlob.CreatePositioned(
+            System.Runtime.InteropServices.MemoryMarshal.AsBytes(glyphIds.AsSpan()), SKTextEncoding.GlyphId, font, points);
+        if (blob == null)
+        {
+            return null;
+        }
+
+        var bitmap = new SKBitmap(new SKImageInfo(canvasSize, canvasSize, SKColorType.Bgra8888, SKAlphaType.Premul));
+        using var canvas = new SKCanvas(bitmap);
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        canvas.Clear(SKColors.Transparent);
+
+        // The caller trims and centers the result; it only has to be inside the canvas here.
+        SKRect bounds = blob.Bounds;
+        canvas.DrawText(blob, (canvasSize - bounds.Width) / 2f - bounds.Left, (canvasSize - bounds.Height) / 2f - bounds.Top, paint);
+        canvas.Flush();
+        return bitmap;
+    }
+
+    private static bool TryGetSystemEmojiFont(
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out SKTypeface? typeface,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out HarfBuzzSharp.Font? shapingFont)
+    {
+        // Callers hold SyncRoot, so the fonts are created once and never used by two threads at a time.
+        if (!SystemEmojiFontResolved)
+        {
+            SystemEmojiFontResolved = true;
+            try
+            {
+                // "Zsye" asks for the emoji presentation; without it a monochrome symbol font can win.
+                SKTypeface? match = SKFontManager.Default.MatchCharacter(null, SKFontStyle.Normal, ["und-Zsye"], 0x1F600);
+                if (match != null)
+                {
+                    using SKStreamAsset stream = match.OpenStream(out int faceIndex);
+                    int length = stream.Length;
+                    IntPtr data = System.Runtime.InteropServices.Marshal.AllocHGlobal(length);
+                    stream.Read(data, length);
+                    // The blob owns the copy of the font file for as long as the shaping font lives.
+                    using var fontData = new HarfBuzzSharp.Blob(data, length, HarfBuzzSharp.MemoryMode.ReadOnly,
+                        () => System.Runtime.InteropServices.Marshal.FreeHGlobal(data));
+                    using var face = new HarfBuzzSharp.Face(fontData, faceIndex);
+                    var font = new HarfBuzzSharp.Font(face);
+                    font.SetScale(SystemEmojiShapingScale, SystemEmojiShapingScale);
+                    font.SetFunctionsOpenType();
+                    SystemEmojiTypeface = match;
+                    SystemEmojiShapingFont = font;
+                }
+            }
+            catch
+            {
+                SystemEmojiTypeface = null;
+                SystemEmojiShapingFont = null;
+            }
+        }
+
+        typeface = SystemEmojiTypeface;
+        shapingFont = SystemEmojiShapingFont;
+        return typeface != null && shapingFont != null;
     }
 
     private static SKBitmap CopyWicBitmapToSkBitmap(IWICBitmap wicBitmap, int width, int height)
