@@ -141,6 +141,7 @@ public class EditorCore : IDisposable
 
     // Matches the size of SelectionResizeNode, which hosts draw at each handle position.
     private const float HandleSize = 15f;
+    private const float MinShapeSize = 5f;
     private const float RotationHandleOffset = 30f;
     public enum HandleType { None, TopLeft, TopMiddle, TopRight, MiddleRight, BottomRight, BottomMiddle, BottomLeft, MiddleLeft, Start, End, Rotate }
 
@@ -661,8 +662,10 @@ public class EditorCore : IDisposable
                 return;
             }
 
-            // Allow dragging a selected annotation even if the current tool is not Select
-            if (_selectedAnnotation.HitTest(point))
+            // The Select tool drags the selected annotation. A drawing tool only drags annotations
+            // of its own type (below), and draws over the others.
+            if (_selectedAnnotation.HitTest(point) &&
+                (ActiveTool == EditorTool.Select || CanActiveToolDrag(_selectedAnnotation)))
             {
                 _isDragging = true;
                 _lastDragPoint = point;
@@ -684,6 +687,18 @@ public class EditorCore : IDisposable
             {
                 _selectedAnnotation = null;
             }
+            InvalidateRequested?.Invoke();
+            return;
+        }
+
+        // As in the image editor (EditorSelectionController.OnPointerPressed), a drawing tool
+        // selects and drags the top-most annotation under the pointer when it is of the tool's
+        // own type, instead of drawing a new one on top of it.
+        if (HitTest(point) is { } sameToolAnnotation && CanActiveToolDrag(sameToolAnnotation))
+        {
+            _selectedAnnotation = sameToolAnnotation;
+            _lastDragPoint = point;
+            _isDragging = true;
             InvalidateRequested?.Invoke();
             return;
         }
@@ -882,6 +897,19 @@ public class EditorCore : IDisposable
             return;
         }
 
+        // As in the image editor (EditorInputController.OnCanvasPointerReleased), a shape smaller
+        // than MinShapeSize in both directions is discarded, so that a click does not leave a
+        // zero-size shape. A step, a freehand stroke, a text and a cursor are placed with a click.
+        if (_currentAnnotation is not (NumberAnnotation or FreehandAnnotation or TextAnnotation or CursorAnnotation) &&
+            Math.Abs(point.X - _startPoint.X) < MinShapeSize &&
+            Math.Abs(point.Y - _startPoint.Y) < MinShapeSize)
+        {
+            _annotations.Remove(_currentAnnotation);
+            _currentAnnotation = null;
+            InvalidateRequested?.Invoke();
+            return;
+        }
+
         // Create annotation memento for undo/redo
         // We exclude the current annotation because the undo stack must contain the state BEFORE this addition
         _history.CreateAnnotationsMemento(excludeAnnotation: _currentAnnotation);
@@ -907,6 +935,14 @@ public class EditorCore : IDisposable
         }
 
         InvalidateRequested?.Invoke();
+    }
+
+    /// <summary>
+    /// A drawing tool drags annotations of its own type. Freehand always draws a new stroke.
+    /// </summary>
+    private bool CanActiveToolDrag(Annotation annotation)
+    {
+        return ActiveTool != EditorTool.Freehand && annotation.ToolType == ActiveTool;
     }
 
     private HandleType GetHitHandle(SKPoint point)
@@ -1381,7 +1417,8 @@ public class EditorCore : IDisposable
 
     private IEnumerable<(HandleType Type, SKPoint Position)> GetAnnotationHandles(Annotation annotation)
     {
-        if (annotation is FreehandAnnotation or CursorAnnotation)
+        // A step has no resize handles in the image editor either: its size follows its font size.
+        if (annotation is FreehandAnnotation or CursorAnnotation or NumberAnnotation)
         {
             yield break;
         }
